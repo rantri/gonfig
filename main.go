@@ -12,20 +12,35 @@ import (
 )
 
 const (
-	rootTreePath = "root_tree.json"
+	rootConfigPath = "config.json"
+	siteConfigPath = "config.site.json"
 )
 
 func getRootTree() (map[string]interface{}, error) {
-	var v map[string]interface{}
-	d, err := ioutil.ReadFile(rootTreePath)
+	var c map[string]interface{}
+	err := loadFromFile(rootConfigPath, &c)
 	if err != nil {
 		return map[string]interface{}{}, err
 	}
-	err = json.Unmarshal(d, &v)
+
+	err = loadFromFile(siteConfigPath, &c)
 	if err != nil {
 		return map[string]interface{}{}, err
 	}
-	return v, nil
+
+	return c, nil
+}
+
+func loadFromFile(filePath string, c *map[string]interface{}) error {
+	fileData, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(fileData, c)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func saveRootTree(rt map[string]interface{}) error {
@@ -33,7 +48,7 @@ func saveRootTree(rt map[string]interface{}) error {
 	if err != nil {
 		return err
 	}
-	f, err := os.Create(rootTreePath)
+	f, err := os.Create(rootConfigPath)
 	if err != nil {
 		return err
 	}
@@ -154,6 +169,12 @@ func main() {
 		log.Fatalf("Error creating Travel router: %v\n", err)
 	}
 	http.Handle("/", r)
+	//http.HandleFunc("/site", func(w http.ResponseWriter, r *http.Request) {
+	//	w.Header().Add("Content-Type", "application/json")
+	//	f, _ := ioutil.ReadFile(siteConfigPath)
+	//	w.Write(f)
+	//})
+
 	log.Printf("Listening on port 8000")
 	http.ListenAndServe("0.0.0.0:8000", nil)
 }
